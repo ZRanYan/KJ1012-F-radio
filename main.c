@@ -29,11 +29,6 @@ v2.0 添加收发功能，能够被动呼叫
 #include "nrf_uarte.h"
 #include "nrf_gpio.h"
 
-//#include "SEGGER_RTT.h"
-//#include "nrf_log.h"
-//#include "nrf_log_ctrl.h"
-//#include "nrf_log_default_backends.h"
-
 
 //区间接收器的参数配置
 #define MAX_TADA_NUM     					(100U)								//定义一个周期内最大的接入定位卡数量
@@ -42,8 +37,7 @@ v2.0 添加收发功能，能够被动呼叫
 #define Passive_callvalue         0x08                  //定义定位卡被动呼叫的命令
 #define M_TIMER_INTERVAL    			APP_TIMER_TICKS(15000)   //周期发送数据的间隔，单位：ms
 #define M_TIMEOUT_UART_RECEIVE   	APP_TIMER_TICKS(9000)  	 //定义超时重发时间，单位：ms
-#define	M_TIMEOUT_CAN_UART				APP_TIMER_TICKS(3000)		 //定义距离上一次数据发送的间隔大于3s
-#define M_DELAY_INQUIRE						APP_TIMER_TICKS(3000)
+
 #define List_Array_Num		        (64U)                 //定义数组链表的数组大小
 #define Uart_TX_Pin								8
 #define Uart_RX_Pin								6
@@ -61,14 +55,12 @@ v2.0 添加收发功能，能够被动呼叫
 //定义main.c文件中的结构体和全局变量
 APP_TIMER_DEF(m_receiver);                               //定义周期发送定位卡数据的定时器
 APP_TIMER_DEF(m_OT_Send); 															 //定义超时重传定时器	
-APP_TIMER_DEF(m_Serial_Transmit);												 //定义超时清除禁止串口发送标志位
-APP_TIMER_DEF(m_Delay_Inquire);													 //若串口不可以发送信息，则进行延时查询
 
 static volatile uint16_t Link_list_present_num=0;  			 //链表中保存的定位卡个数
 static volatile uint16_t Traver_num=0;   						     //遍历链表采集的数据个数
 static volatile uint16_t m_Present_uart;                 //需要串口发送的字节数
-static volatile uint16_t m_PassiveCall_Card;						 //单呼叫的定位卡编号
-static volatile uint16_t m_Paging_num=0x00;									 //寻呼序号
+
+
 static  radio_packet_t    m_receive_packet;               //定义的radio数据结构
 static  radio_packet_t    m_send_packet={
 																					.Card_stat=0x00
@@ -77,17 +69,11 @@ static bool is_true=true;
 static bool is_false=false;
 static nrf_drv_uart_t Uart_Inst=NRF_DRV_UART_INSTANCE(0); //定义串口服务
 static    uint8_t Uart_data[Uart_data_num]={0}; 						//定义串口传输的数组
-static    uint8_t Uart_data_receive[8]={0};                 //接收到的串口回复信息 
-static  volatile bool Is_Stop_Uart=false;                  //当没有接收到任何定位卡信息时，停止接收信息标志位
-static  volatile bool Is_Port_Transmit=true;               //表示是否可以进行串口发送
-static    uint8_t Uart_Passive_Reply_date[4]={0x55,0x22,0x00,0xff};      //回复被动呼叫信息,第一次默认校验成功
 
-typedef enum {
-		All_Passive_state,																		//优先级最高
-		Single_Passive_state,
-		No_Passive_state
-}Internal_state;
-static volatile Internal_state  m_Internal_state=No_Passive_state;        //初始化当前状态，定义状态切换的优先级
+static  uint8_t Contrast_uart_receive[6]={0x55,0x11,0xff,0x00,0x0d,0x0a};   //0xff代表可变数据
+static  volatile bool Is_Stop_Uart=false;                  //当没有接收到任何定位卡信息时，停止接收信息标志位
+static  uint8_t Uart_data_receive[6]={0};
+
 typedef struct Ne_Dimon  																	//保存信息的链表结构体
 {
     uint8_t     Card_State;  															//当前状态
@@ -101,7 +87,6 @@ struct Information{                                       //定义定位卡信息结构体
 		uint8_t Identification_1;															//定位卡编号的高八位
 		uint8_t Identification_2;															//定位卡编号的低八位
 }Inform_Array[MAX_TADA_NUM];
-
 
 static void Clock_init(void)															//时钟初始化
 {
@@ -151,7 +136,7 @@ void Conserve_Unique(pNe_Dimon *node_t,const radio_packet_t *packet)   					//去
 //		 if(pNode==NULL&&Link_list_present_num<MAX_TADA_NUM)
 		 if(pNode==NULL)
       {
-				  if(Link_list_present_num>=MAX_TADA_NUM)                               //限制数组链表大小
+				    if(Link_list_present_num>=MAX_TADA_NUM)                               //限制数组链表大小
 							return;
 						New_Node=(Ne_Dimon*)malloc(sizeof(Ne_Dimon));
 						Init_Node(&New_Node,temp_state,temp_id);
@@ -205,39 +190,9 @@ void radio_evt_handler(radio_evt_t * evt)																				//radio处理函数
 						if(m_receive_packet.Random==0||m_receive_packet.Random==1){         //进行信息的验证
 
 							radio_frequency_set(0);                                          //更改频率到2360MHz
-							switch(m_Internal_state){
-								case No_Passive_state:{
-										m_send_packet.Random=Cancel_Passive_Card;
+							
+										m_send_packet.Random=Sleep_enter;
 										m_send_packet.ID=m_receive_packet.ID;
-//									m_send_packet.Random=Sleep_enter;                            										 //更改回复信息
-//									m_send_packet.ID=m_receive_packet.ID;
-//									m_send_packet.Crc=Sleep_enter^(m_send_packet.Card_stat)^( \
-//																								(uint8_t)m_receive_packet.ID)^(m_receive_packet.ID>>8);//重新计算校验
-								}break;
-								case All_Passive_state:{							
-									m_send_packet.Random=Passive_callvalue;                            										 //更改回复信息
-									m_send_packet.ID=m_receive_packet.ID;
-									m_send_packet.Card_stat=(uint8_t)m_Paging_num;
-									m_send_packet.Crc=m_Paging_num>>8;	 
-								}break;
-								case Single_Passive_state:{
-									if(m_receive_packet.ID==m_PassiveCall_Card){                                           //匹配定位卡编号
-									m_send_packet.Random=Passive_callvalue;                            										 //更改回复信息
-									m_send_packet.ID=m_receive_packet.ID;
-									m_send_packet.Card_stat=(uint8_t)m_Paging_num;
-									m_send_packet.Crc=m_Paging_num>>8;		
-									}else{                                                                                //匹配失败则发送休眠信息
-									m_send_packet.Random=Cancel_Passive_Card;
-									m_send_packet.ID=m_receive_packet.ID;
-//									m_send_packet.Random=Sleep_enter;                            												 //更改回复信息
-//									m_send_packet.ID=m_receive_packet.ID;
-//									m_send_packet.Crc=Sleep_enter^(m_send_packet.Card_stat)^( \
-//																								(uint8_t)m_receive_packet.ID)^(m_receive_packet.ID>>8);//重新计算校验
-									}
-								}break;
-								default:
-									break;
-							}
 							radio_send(&m_send_packet);
 							return ;
 						}		
@@ -251,23 +206,13 @@ void radio_evt_handler(radio_evt_t * evt)																				//radio处理函数
 static uint8_t Crc8_Compute(uint8_t const *p_data,uint16_t size)               //计算字节校验值
 {
 		uint8_t crc=0x00;
-		for(uint16_t i=1;i<size;i++)
+		for(uint16_t i=0;i<size;i++)
 		{
 				crc^=*(p_data+i);
 		}
 		return crc;
 }
-static bool CRC8_Command_Frame()                                 //对全局数组Uart_data_receive做校验
-{
-		uint8_t temp_crc=0x00;
-		for(uint8_t i=1;i<7;i++)
-			temp_crc^=(Uart_data_receive[i]);
-		if(temp_crc==Uart_data_receive[7])
-				return true;                                             //校验通过
-		else	
-				return false;
-		
-}
+
 static void Timeout_handler_transmit(void *p_context)                                  //周期通过串口发送扫描到的定位卡信息
 {
      if(Link_list_present_num==0)
@@ -282,21 +227,17 @@ static void Timeout_handler_transmit(void *p_context)                           
 			  Uart_data[0]=0x55;
 				Uart_data[1]=0x01;
 				Uart_data[2]=Traver_num;
+			 Contrast_uart_receive[2]=Traver_num;
 			 memcpy(Uart_data+3,Inform_Array,Traver_num*sizeof(struct Information));
 			 m_Present_uart=3+Traver_num*3;
 			 Uart_data[m_Present_uart]=Crc8_Compute(Uart_data,m_Present_uart);				//添加一字节的crc校验
+			 Uart_data[++m_Present_uart]=0x0d;
+			 Uart_data[++m_Present_uart]=0x0a;
 			 m_Present_uart++;
 			 memset(Inform_Array,0,MAX_TADA_NUM*sizeof(struct Information));
 			 Link_list_present_num=0;
-			 
-			 if(Is_Port_Transmit)
-			   nrf_drv_uart_tx(&Uart_Inst,Uart_data,m_Present_uart);
-			 else{
-				app_timer_stop(m_Delay_Inquire);
-				 app_timer_start(m_Delay_Inquire,M_DELAY_INQUIRE,&is_true);
-			 }
 		   CRITICAL_REGION_EXIT();
-			 app_timer_start(m_OT_Send,M_TIMEOUT_UART_RECEIVE,&is_true);             //开启超时定时器
+			 nrf_drv_uart_tx(&Uart_Inst,Uart_data,m_Present_uart);
 	}
 }
 static void Timeout_handler_receive(void *p_context)  																  //串口接收数据处理函数
@@ -304,84 +245,25 @@ static void Timeout_handler_receive(void *p_context)  																  //串口接
 		bool m_temp= *(bool *)p_context;                                            //根据传进来的参数值进入不同的服务
 	  if(m_temp)                                                                  //超时重传操作
 		{
-				if(Is_Port_Transmit){
-					 nrf_drv_uart_tx(&Uart_Inst,Uart_data,m_Present_uart);
-				}else{
-					 app_timer_stop(m_Delay_Inquire);
-					 app_timer_start(m_Delay_Inquire,M_DELAY_INQUIRE,&is_true);  //重新延时查询
-				}
+			  nrf_drv_uart_tx(&Uart_Inst,Uart_data,m_Present_uart);
 		}else{                                                                      //对串口收到的信息做处理
 				CRITICAL_REGION_ENTER();
-				//if((0x56==Uart_data_receive[0])&&(CRC8_Command_Frame())){                //校验接收数组的第一个数
-				if((0x56==Uart_data_receive[0])){                //校验接收数组的第一个数，方便测试，没有对接收的数据进行CRC校验
-						if(UartR_Position_Type==Uart_data_receive[1]){  																	                                    
-											app_timer_stop(m_OT_Send);                                //如果收到的信息正确，则取消超时重传操作，否侧等待一段时间后再次重传一次
-									memset(Uart_data_receive,0,sizeof(Uart_data_receive));                  //清空接收数组内容
-									nrf_drv_uart_rx_abort(&Uart_Inst);
-									nrf_drv_uart_rx(&Uart_Inst,Uart_data_receive,sizeof(Uart_data_receive));//等待串口信息服务，即等待其它串口发来的指令
-						}else if(UartR_Passive_Type==Uart_data_receive[1]) {                 //接收控制命令
-							    m_PassiveCall_Card=Uart_data_receive[2]<<8|Uart_data_receive[3];
-									m_Paging_num=Uart_data_receive[5]<<8|Uart_data_receive[6];
-							    if(UartR_Open_Passive_Type==Uart_data_receive[4]){
-										    if(m_PassiveCall_Card){
-													m_Internal_state=(m_Internal_state==All_Passive_state)?All_Passive_state:Single_Passive_state;
-												}else{
-													 m_Internal_state=All_Passive_state;
-												}
-									}else if(UartR_Close_Passive_Type==Uart_data_receive[4]){
-												if(m_PassiveCall_Card){
-													m_Internal_state=(m_Internal_state==All_Passive_state)?All_Passive_state:No_Passive_state;
-												}else{
-													 m_Internal_state=No_Passive_state;
-												}
-									}else{
-											 CRITICAL_REGION_EXIT();
-											 return ;
-									}
-									Uart_Passive_Reply_date[2]=Uart_data_receive[4];
-									Uart_Passive_Reply_date[3]=0x00^Uart_Passive_Reply_date[1]^Uart_Passive_Reply_date[2];      //一字节校验值
-									if(Is_Port_Transmit){
-											 nrf_drv_uart_tx(&Uart_Inst,Uart_Passive_Reply_date,4);        //回复信息
-									}else{
-											 app_timer_stop(m_Delay_Inquire);
-											 app_timer_start(m_Delay_Inquire,M_DELAY_INQUIRE,&is_false);  //重新延时查询
-									}
-						}
+			  if(strcmp((char*)Uart_data_receive,(char*)Contrast_uart_receive)==0)
+					{
+						  uint32_t err_code=app_timer_stop(m_OT_Send);
+							m_Present_uart=0;
+							memset(Uart_data,0,sizeof(Uart_data));
 					}
+				memset(Uart_data_receive,0,sizeof(Uart_data_receive));
 				CRITICAL_REGION_EXIT();
 		}
 }
-static void Timeout_handler_restore_uart(void *context)
-{
-		Is_Port_Transmit=true;
-}
-static void Timeout_handler_inquire(void *context)
-{
-		bool m_temp= *(bool *)context;
-		if(m_temp){
-			  if(Is_Port_Transmit){
-					 nrf_drv_uart_tx(&Uart_Inst,Uart_data,m_Present_uart);
-				}else{
-					 app_timer_stop(m_Delay_Inquire);
-					 app_timer_start(m_Delay_Inquire,M_DELAY_INQUIRE,&is_true);  //重新延时查询
-				}
-		}else{
-				if(Is_Port_Transmit){
-					 nrf_drv_uart_tx(&Uart_Inst,Uart_Passive_Reply_date,4);        //回复信息
-				}else{
-					 app_timer_stop(m_Delay_Inquire);
-					 app_timer_start(m_Delay_Inquire,M_DELAY_INQUIRE,&is_true);  //重新延时查询
-				}
-		}
-	
-}
+
 static void Times_init()                                                        			//初始化RTC定时器
 {
 		app_timer_init();
 	  app_timer_create(&m_receiver,APP_TIMER_MODE_REPEATED,Timeout_handler_transmit);   //循环定时器
 		app_timer_create(&m_OT_Send,APP_TIMER_MODE_SINGLE_SHOT,Timeout_handler_receive);  //只能生效一次
-		app_timer_create(&m_Serial_Transmit,APP_TIMER_MODE_SINGLE_SHOT,Timeout_handler_restore_uart);
-		app_timer_create(&m_Delay_Inquire,APP_TIMER_MODE_SINGLE_SHOT,Timeout_handler_inquire);
 }
 static void APP_Start()
 {
@@ -393,10 +275,12 @@ void uart_event_handler(nrf_drv_uart_event_t *p_event,void* p_context)          
 		{
 			 case NRF_DRV_UART_EVT_TX_DONE:
 			 {
-					Is_Port_Transmit=false;
-				  app_timer_start(m_Serial_Transmit,M_TIMEOUT_CAN_UART,NULL);
+				  if(Is_Stop_Uart)
+								return;
 					nrf_drv_uart_rx_abort(&Uart_Inst);
 					nrf_drv_uart_rx(&Uart_Inst,Uart_data_receive,sizeof(Uart_data_receive));//等待串口信息服务
+					app_timer_stop(m_OT_Send);
+					app_timer_start(m_OT_Send,M_TIMEOUT_UART_RECEIVE,&is_true);
 			 }break;
 			 case NRF_DRV_UART_EVT_RX_DONE:
 			 {
@@ -417,19 +301,10 @@ static void Uart_init(void)																												//串口初始化
     config_uart.pseltxd = Uart_TX_Pin ;
 		nrf_drv_uart_init(&Uart_Inst, &config_uart,  uart_event_handler);
 }
-//static void log_init()
-//{
-//		uint32_t err_code;
-//    err_code = NRF_LOG_INIT(NULL);
-//    APP_ERROR_CHECK(err_code);
-//    NRF_LOG_DEFAULT_BACKENDS_INIT();
-//}
+
 int main()
 {
 		Clock_init();
-//		log_init();
-//		NRF_LOG_INFO("-----------");
-//		NRF_LOG_FLUSH();
 		radio_init(&radio_evt_handler);
 		Uart_init();
 		Times_init();
