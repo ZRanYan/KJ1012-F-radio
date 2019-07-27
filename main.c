@@ -35,8 +35,7 @@ v2.0 添加收发功能，能够被动呼叫
 #define Uart_data_num    					(350U)  							//串口传输最大的字符串,设计100个终端数
 #define Sleep_enter								0x01									//定义定位卡休眠的命令
 #define Passive_callvalue         0x08                  //定义定位卡被动呼叫的命令
-#define M_TIMER_INTERVAL    			APP_TIMER_TICKS(15000)   //周期发送数据的间隔，单位：ms
-#define M_TIMEOUT_UART_RECEIVE   	APP_TIMER_TICKS(9000)  	 //定义超时重发时间，单位：ms
+#define M_TIMER_INTERVAL    			APP_TIMER_TICKS(8000)   //周期发送数据的间隔，单位：ms
 
 #define List_Array_Num		        (64U)                 //定义数组链表的数组大小
 #define Uart_TX_Pin								8
@@ -54,7 +53,7 @@ v2.0 添加收发功能，能够被动呼叫
 #define Cancel_Passive_Card						 0x10                   //测试无线取消定位卡的被动响铃功能
 //定义main.c文件中的结构体和全局变量
 APP_TIMER_DEF(m_receiver);                               //定义周期发送定位卡数据的定时器
-APP_TIMER_DEF(m_OT_Send); 															 //定义超时重传定时器	
+
 
 static volatile uint16_t Link_list_present_num=0;  			 //链表中保存的定位卡个数
 static volatile uint16_t Traver_num=0;   						     //遍历链表采集的数据个数
@@ -250,7 +249,6 @@ static void Timeout_handler_receive(void *p_context)  																  //串口接
 				CRITICAL_REGION_ENTER();
 			  if(strcmp((char*)Uart_data_receive,(char*)Contrast_uart_receive)==0)
 					{
-						  uint32_t err_code=app_timer_stop(m_OT_Send);
 							m_Present_uart=0;
 							memset(Uart_data,0,sizeof(Uart_data));
 					}
@@ -263,7 +261,6 @@ static void Times_init()                                                        
 {
 		app_timer_init();
 	  app_timer_create(&m_receiver,APP_TIMER_MODE_REPEATED,Timeout_handler_transmit);   //循环定时器
-		app_timer_create(&m_OT_Send,APP_TIMER_MODE_SINGLE_SHOT,Timeout_handler_receive);  //只能生效一次
 }
 static void APP_Start()
 {
@@ -279,8 +276,6 @@ void uart_event_handler(nrf_drv_uart_event_t *p_event,void* p_context)          
 								return;
 					nrf_drv_uart_rx_abort(&Uart_Inst);
 					nrf_drv_uart_rx(&Uart_Inst,Uart_data_receive,sizeof(Uart_data_receive));//等待串口信息服务
-					app_timer_stop(m_OT_Send);
-					app_timer_start(m_OT_Send,M_TIMEOUT_UART_RECEIVE,&is_true);
 			 }break;
 			 case NRF_DRV_UART_EVT_RX_DONE:
 			 {
