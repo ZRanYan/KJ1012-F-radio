@@ -1,15 +1,12 @@
 /*
 ///////////////////////////////////////////
-±¾ÎÄÓÃÓÚĞ¾Á¦²¨Í¨×ÔÑĞKJ1012-K¿óÓÃ±¾°²ĞÍ¶¨Î»¿¨
-±¾ÎÄ½öÊÊÓÃÓÚKJ1012-K¿óÓÃ±¾°²ĞÍ¶¨Î»¿¨
-ÎÄ¼ş±àĞ´Õß£ºÑîÕÕÈ»
-ÎÄ¼ş±àĞ´ÈÕÆÚ£º2019Äê4ÔÂ13ºÅ
-ÎÄ¼ş°æ±¾£ºv2.0
-°æÈ¨ËùÓĞ£ºÖ£ÖİĞ¾Á¦²¨Í¨ĞÅÏ¢¼¼ÊõÓĞÏŞ¹«Ë¾
+æ–‡ä»¶ç¼–å†™è€…ï¼šæ¨ç…§ç„¶
+æ–‡ä»¶ç¼–å†™æ—¥æœŸï¼š2019å¹´4æœˆ13å·
+æ–‡ä»¶ç‰ˆæœ¬ï¼šv2.0
 
-°æ±¾ĞŞ¸Ä£º
-v1.0 ¶¨Ê±¼ÓËæ»úÑÓÊ±¹ã²¥±àºÅ£¬µÍµçÁ¿±¨¾¯£¬Ö÷¶¯Çó¾È£¬Ò»¼üÉı¼¶¹¦ÄÜ
-v2.0 Ìí¼ÓÊÕ·¢¹¦ÄÜ£¬ÄÜ¹»±»¶¯ºô½Ğ
+ç‰ˆæœ¬ä¿®æ”¹ï¼š
+v1.0 å®šæ—¶åŠ éšæœºå»¶æ—¶å¹¿æ’­ç¼–å·ï¼Œä½ç”µé‡æŠ¥è­¦ï¼Œä¸»åŠ¨æ±‚æ•‘ï¼Œä¸€é”®å‡çº§åŠŸèƒ½
+v2.0 æ·»åŠ æ”¶å‘åŠŸèƒ½ï¼Œèƒ½å¤Ÿè¢«åŠ¨å‘¼å«
 //////////////////////////////////////////
 */
 #include <stdlib.h>
@@ -30,71 +27,71 @@ v2.0 Ìí¼ÓÊÕ·¢¹¦ÄÜ£¬ÄÜ¹»±»¶¯ºô½Ğ
 #include "nrf_gpio.h"
 
 
-//Çø¼ä½ÓÊÕÆ÷µÄ²ÎÊıÅäÖÃ
-#define MAX_TADA_NUM     					(100U)								//¶¨ÒåÒ»¸öÖÜÆÚÄÚ×î´óµÄ½ÓÈë¶¨Î»¿¨ÊıÁ¿
-#define Uart_data_num    					(350U)  							//´®¿Ú´«Êä×î´óµÄ×Ö·û´®,Éè¼Æ100¸öÖÕ¶ËÊı
-#define Sleep_enter								0x01									//¶¨Òå¶¨Î»¿¨ĞİÃßµÄÃüÁî
-#define Passive_callvalue         0x08                  //¶¨Òå¶¨Î»¿¨±»¶¯ºô½ĞµÄÃüÁî
-#define M_TIMER_INTERVAL    			APP_TIMER_TICKS(8000)   //ÖÜÆÚ·¢ËÍÊı¾İµÄ¼ä¸ô£¬µ¥Î»£ºms
+//åŒºé—´æ¥æ”¶å™¨çš„å‚æ•°é…ç½®
+#define MAX_TADA_NUM     					(100U)								//å®šä¹‰ä¸€ä¸ªå‘¨æœŸå†…æœ€å¤§çš„æ¥å…¥å®šä½å¡æ•°é‡
+#define Uart_data_num    					(350U)  							//ä¸²å£ä¼ è¾“æœ€å¤§çš„å­—ç¬¦ä¸²,è®¾è®¡100ä¸ªç»ˆç«¯æ•°
+#define Sleep_enter								0x01									//å®šä¹‰å®šä½å¡ä¼‘çœ çš„å‘½ä»¤
+#define Passive_callvalue         0x08                  //å®šä¹‰å®šä½å¡è¢«åŠ¨å‘¼å«çš„å‘½ä»¤
+#define M_TIMER_INTERVAL    			APP_TIMER_TICKS(8000)   //å‘¨æœŸå‘é€æ•°æ®çš„é—´éš”ï¼Œå•ä½ï¼šms
 
-#define List_Array_Num		        (64U)                 //¶¨ÒåÊı×éÁ´±íµÄÊı×é´óĞ¡
+#define List_Array_Num		        (64U)                 //å®šä¹‰æ•°ç»„é“¾è¡¨çš„æ•°ç»„å¤§å°
 #define Uart_TX_Pin								8
 #define Uart_RX_Pin								6
 
 //#define Uart_TX_Pin								RX_PIN_NUMBER
 //#define Uart_RX_Pin								TX_PIN_NUMBER
 
-#define Uart_BAUDRATE             NRF_UART_BAUDRATE_9600 //¶¨Òå´®¿Ú²¨ÌØÂÊ9600
-#define UartR_Position_Type				      0x11                	//¶¨Òå¶¨Î»Êı¾İ½ÓÊÕ»ØÓ¦ÀàĞÍ
+#define Uart_BAUDRATE             NRF_UART_BAUDRATE_9600 //å®šä¹‰ä¸²å£æ³¢ç‰¹ç‡9600
+#define UartR_Position_Type				      0x11                	//å®šä¹‰å®šä½æ•°æ®æ¥æ”¶å›åº”ç±»å‹
 #define UartR_Passive_Type							0x02
 #define UartR_Open_Passive_Type					0x06
 #define UartR_Close_Passive_Type				0x07
 		
-#define Cancel_Passive_Card						 0x10                   //²âÊÔÎŞÏßÈ¡Ïû¶¨Î»¿¨µÄ±»¶¯ÏìÁå¹¦ÄÜ
-//¶¨Òåmain.cÎÄ¼şÖĞµÄ½á¹¹ÌåºÍÈ«¾Ö±äÁ¿
-APP_TIMER_DEF(m_receiver);                               //¶¨ÒåÖÜÆÚ·¢ËÍ¶¨Î»¿¨Êı¾İµÄ¶¨Ê±Æ÷
+#define Cancel_Passive_Card						 0x10                   //æµ‹è¯•æ— çº¿å–æ¶ˆå®šä½å¡çš„è¢«åŠ¨å“é“ƒåŠŸèƒ½
+//å®šä¹‰main.cæ–‡ä»¶ä¸­çš„ç»“æ„ä½“å’Œå…¨å±€å˜é‡
+APP_TIMER_DEF(m_receiver);                               //å®šä¹‰å‘¨æœŸå‘é€å®šä½å¡æ•°æ®çš„å®šæ—¶å™¨
 
 
-static volatile uint16_t Link_list_present_num=0;  			 //Á´±íÖĞ±£´æµÄ¶¨Î»¿¨¸öÊı
-static volatile uint16_t Traver_num=0;   						     //±éÀúÁ´±í²É¼¯µÄÊı¾İ¸öÊı
-static volatile uint16_t m_Present_uart;                 //ĞèÒª´®¿Ú·¢ËÍµÄ×Ö½ÚÊı
+static volatile uint16_t Link_list_present_num=0;  			 //é“¾è¡¨ä¸­ä¿å­˜çš„å®šä½å¡ä¸ªæ•°
+static volatile uint16_t Traver_num=0;   						     //éå†é“¾è¡¨é‡‡é›†çš„æ•°æ®ä¸ªæ•°
+static volatile uint16_t m_Present_uart;                 //éœ€è¦ä¸²å£å‘é€çš„å­—èŠ‚æ•°
 
 
-static  radio_packet_t    m_receive_packet;               //¶¨ÒåµÄradioÊı¾İ½á¹¹
+static  radio_packet_t    m_receive_packet;               //å®šä¹‰çš„radioæ•°æ®ç»“æ„
 static  radio_packet_t    m_send_packet={
 																					.Card_stat=0x00
 };									 
 static bool is_true=true;
 static bool is_false=false;
-static nrf_drv_uart_t Uart_Inst=NRF_DRV_UART_INSTANCE(0); //¶¨Òå´®¿Ú·şÎñ
-static    uint8_t Uart_data[Uart_data_num]={0}; 						//¶¨Òå´®¿Ú´«ÊäµÄÊı×é
+static nrf_drv_uart_t Uart_Inst=NRF_DRV_UART_INSTANCE(0); //å®šä¹‰ä¸²å£æœåŠ¡
+static    uint8_t Uart_data[Uart_data_num]={0}; 						//å®šä¹‰ä¸²å£ä¼ è¾“çš„æ•°ç»„
 
-static  uint8_t Contrast_uart_receive[6]={0x55,0x11,0xff,0x00,0x0d,0x0a};   //0xff´ú±í¿É±äÊı¾İ
-static  volatile bool Is_Stop_Uart=false;                  //µ±Ã»ÓĞ½ÓÊÕµ½ÈÎºÎ¶¨Î»¿¨ĞÅÏ¢Ê±£¬Í£Ö¹½ÓÊÕĞÅÏ¢±êÖ¾Î»
+static  uint8_t Contrast_uart_receive[6]={0x55,0x11,0xff,0x00,0x0d,0x0a};   //0xffä»£è¡¨å¯å˜æ•°æ®
+static  volatile bool Is_Stop_Uart=false;                  //å½“æ²¡æœ‰æ¥æ”¶åˆ°ä»»ä½•å®šä½å¡ä¿¡æ¯æ—¶ï¼Œåœæ­¢æ¥æ”¶ä¿¡æ¯æ ‡å¿—ä½
 static  uint8_t Uart_data_receive[6]={0};
 
-typedef struct Ne_Dimon  																	//±£´æĞÅÏ¢µÄÁ´±í½á¹¹Ìå
+typedef struct Ne_Dimon  																	//ä¿å­˜ä¿¡æ¯çš„é“¾è¡¨ç»“æ„ä½“
 {
-    uint8_t     Card_State;  															//µ±Ç°×´Ì¬
+    uint8_t     Card_State;  															//å½“å‰çŠ¶æ€
 	//	uint8_t     Frequency;
     uint16_t    Card_ID;
     struct Ne_Dimon *next;
 }Ne_Dimon,*pNe_Dimon;
-static pNe_Dimon pHead[List_Array_Num];   								//¶¨ÒåÁ´±íÊı×é
-struct Information{                                       //¶¨Òå¶¨Î»¿¨ĞÅÏ¢½á¹¹Ìå
-		uint8_t State;																				//¶¨Î»¿¨×´Ì¬
-		uint8_t Identification_1;															//¶¨Î»¿¨±àºÅµÄ¸ß°ËÎ»
-		uint8_t Identification_2;															//¶¨Î»¿¨±àºÅµÄµÍ°ËÎ»
+static pNe_Dimon pHead[List_Array_Num];   								//å®šä¹‰é“¾è¡¨æ•°ç»„
+struct Information{                                       //å®šä¹‰å®šä½å¡ä¿¡æ¯ç»“æ„ä½“
+		uint8_t State;																				//å®šä½å¡çŠ¶æ€
+		uint8_t Identification_1;															//å®šä½å¡ç¼–å·çš„é«˜å…«ä½
+		uint8_t Identification_2;															//å®šä½å¡ç¼–å·çš„ä½å…«ä½
 }Inform_Array[MAX_TADA_NUM];
 
-static void Clock_init(void)															//Ê±ÖÓ³õÊ¼»¯
+static void Clock_init(void)															//æ—¶é’Ÿåˆå§‹åŒ–
 {
-		NRF_CLOCK->EVENTS_HFCLKSTARTED=0;                      //¿ªÆô32MÊ±ÖÓ
+		NRF_CLOCK->EVENTS_HFCLKSTARTED=0;                      //å¼€å¯32Mæ—¶é’Ÿ
 		NRF_CLOCK->TASKS_HFCLKSTART=1;
 	  while(NRF_CLOCK->EVENTS_HFCLKSTARTED==0)
 		{
 		}
-		NRF_CLOCK->LFCLKSRC=(CLOCK_LFCLKSRC_SRC_Xtal<<CLOCK_LFCLKSRC_SRC_Pos);  //¿ªÆôÍâ²¿32.768Ê±ÖÓ
+		NRF_CLOCK->LFCLKSRC=(CLOCK_LFCLKSRC_SRC_Xtal<<CLOCK_LFCLKSRC_SRC_Pos);  //å¼€å¯å¤–éƒ¨32.768æ—¶é’Ÿ
 		NRF_CLOCK->EVENTS_LFCLKSTARTED =0;
 		NRF_CLOCK->TASKS_LFCLKSTART     =1;
 		while(NRF_CLOCK->EVENTS_LFCLKSTARTED==0)
@@ -102,7 +99,7 @@ static void Clock_init(void)															//Ê±ÖÓ³õÊ¼»¯
 		}
 }
 
-static void Init_Node(pNe_Dimon *node_t,uint8_t card_state,uint16_t card_id)   //³õÊ¼»¯Á´±í½Úµã
+static void Init_Node(pNe_Dimon *node_t,uint8_t card_state,uint16_t card_id)   //åˆå§‹åŒ–é“¾è¡¨èŠ‚ç‚¹
 {
     (*node_t)->Card_State=card_state;
 	//	(*node_t)->Frequency=0;
@@ -110,7 +107,7 @@ static void Init_Node(pNe_Dimon *node_t,uint8_t card_state,uint16_t card_id)   /
     (*node_t)->next=NULL;
 }
 
-void Conserve_Unique(pNe_Dimon *node_t,const radio_packet_t *packet)   					//È¥³ıÖØ¸´Êı¾İ
+void Conserve_Unique(pNe_Dimon *node_t,const radio_packet_t *packet)   					//å»é™¤é‡å¤æ•°æ®
 {
 		Ne_Dimon *preNode=NULL;
     Ne_Dimon *pNode=NULL;
@@ -121,12 +118,12 @@ void Conserve_Unique(pNe_Dimon *node_t,const radio_packet_t *packet)   					//È¥
 		{
 			if(temp_id==pNode->Card_ID)
         {
-				//		pNode->Frequency+=1;                                                //É¨Ãè³öÏÖµÄ´ÎÊı×Ô¼ÓÒ»
+				//		pNode->Frequency+=1;                                                //æ‰«æå‡ºç°çš„æ¬¡æ•°è‡ªåŠ ä¸€
 						if(temp_state==pNode->Card_State)
 						{
 							return;
 						}else{
-							 pNode->Card_State|=temp_state;                                   //¸üĞÂ¶¨Î»¿¨×îºóµÄ×´Ì¬
+							 pNode->Card_State|=temp_state;                                   //æ›´æ–°å®šä½å¡æœ€åçš„çŠ¶æ€
 							return;
 						}
 				}
@@ -135,7 +132,7 @@ void Conserve_Unique(pNe_Dimon *node_t,const radio_packet_t *packet)   					//È¥
 //		 if(pNode==NULL&&Link_list_present_num<MAX_TADA_NUM)
 		 if(pNode==NULL)
       {
-				    if(Link_list_present_num>=MAX_TADA_NUM)                               //ÏŞÖÆÊı×éÁ´±í´óĞ¡
+				    if(Link_list_present_num>=MAX_TADA_NUM)                               //é™åˆ¶æ•°ç»„é“¾è¡¨å¤§å°
 							return;
 						New_Node=(Ne_Dimon*)malloc(sizeof(Ne_Dimon));
 						Init_Node(&New_Node,temp_state,temp_id);
@@ -150,14 +147,14 @@ void Conserve_Unique(pNe_Dimon *node_t,const radio_packet_t *packet)   					//È¥
 						Link_list_present_num++;
 			}
 }
-/*  ±éÀúÁ´±í½á¹¹*/
+/*  éå†é“¾è¡¨ç»“æ„*/
 static void Traver_List(pNe_Dimon *Head_t)
 {
 		 pNe_Dimon *pIter=Head_t;
      pNe_Dimon pWork=NULL;
     while((*pIter)!=NULL)
     {
-			//	if((*pIter)->Frequency>0){                                              //½«Á´±íĞÅÏ¢±£´æµ½Êı×éÖĞ
+			//	if((*pIter)->Frequency>0){                                              //å°†é“¾è¡¨ä¿¡æ¯ä¿å­˜åˆ°æ•°ç»„ä¸­
 				Inform_Array[Traver_num].Identification_1=((*pIter)->Card_ID)>>8;
 				Inform_Array[Traver_num].Identification_2=((*pIter)->Card_ID);
 				Inform_Array[Traver_num].State=((*pIter)->Card_State);
@@ -179,16 +176,16 @@ static void Traver_List_Array()
 						Traver_List(&(pHead[i]));
 				}
 }
-void radio_evt_handler(radio_evt_t * evt)																				//radio´¦Àíº¯Êı
+void radio_evt_handler(radio_evt_t * evt)																				//radioå¤„ç†å‡½æ•°
 {
-			if(evt->type==PACKET_RECEIVED){                                            //½ÓÊÕµ½ĞÅÏ¢
+			if(evt->type==PACKET_RECEIVED){                                            //æ¥æ”¶åˆ°ä¿¡æ¯
 				m_receive_packet=evt->packet;
 				if((m_receive_packet.Crc)==((m_receive_packet.Random)^(m_receive_packet.Card_stat)^( \
-																			(uint8_t)m_receive_packet.ID)^(m_receive_packet.ID>>8)))         //¶Ô½ÓÊÕĞÅÏ¢½øĞĞ×Ö½ÚĞ£Ñé
+																			(uint8_t)m_receive_packet.ID)^(m_receive_packet.ID>>8)))         //å¯¹æ¥æ”¶ä¿¡æ¯è¿›è¡Œå­—èŠ‚æ ¡éªŒ
 				{
-						if(m_receive_packet.Random==0||m_receive_packet.Random==1){         //½øĞĞĞÅÏ¢µÄÑéÖ¤
+						if(m_receive_packet.Random==0||m_receive_packet.Random==1){         //è¿›è¡Œä¿¡æ¯çš„éªŒè¯
 
-							radio_frequency_set(0);                                          //¸ü¸ÄÆµÂÊµ½2360MHz
+							radio_frequency_set(0);                                          //æ›´æ”¹é¢‘ç‡åˆ°2360MHz
 							
 										m_send_packet.Random=Sleep_enter;
 										m_send_packet.ID=m_receive_packet.ID;
@@ -199,10 +196,10 @@ void radio_evt_handler(radio_evt_t * evt)																				//radio´¦Àíº¯Êı
 			}else if(evt->type==PACKET_SENT){
 							Conserve_Unique(&(pHead[(m_receive_packet.ID)&0x3f]),&m_receive_packet);	
 			}
-			radio_frequency_set(20);                                                //¸ü¸ÄÆµÂÊµ½2380MHz
-			radio_receive();																									 //½øÈë½ÓÊÕ×´Ì¬
+			radio_frequency_set(20);                                                //æ›´æ”¹é¢‘ç‡åˆ°2380MHz
+			radio_receive();																									 //è¿›å…¥æ¥æ”¶çŠ¶æ€
 }
-static uint8_t Crc8_Compute(uint8_t const *p_data,uint16_t size)               //¼ÆËã×Ö½ÚĞ£ÑéÖµ
+static uint8_t Crc8_Compute(uint8_t const *p_data,uint16_t size)               //è®¡ç®—å­—èŠ‚æ ¡éªŒå€¼
 {
 		uint8_t crc=0x00;
 		for(uint16_t i=0;i<size;i++)
@@ -212,7 +209,7 @@ static uint8_t Crc8_Compute(uint8_t const *p_data,uint16_t size)               /
 		return crc;
 }
 
-static void Timeout_handler_transmit(void *p_context)                                  //ÖÜÆÚÍ¨¹ı´®¿Ú·¢ËÍÉ¨Ãèµ½µÄ¶¨Î»¿¨ĞÅÏ¢
+static void Timeout_handler_transmit(void *p_context)                                  //å‘¨æœŸé€šè¿‡ä¸²å£å‘é€æ‰«æåˆ°çš„å®šä½å¡ä¿¡æ¯
 {
      if(Link_list_present_num==0)
 		 {
@@ -222,14 +219,14 @@ static void Timeout_handler_transmit(void *p_context)                           
 			 Is_Stop_Uart=false;
 			 CRITICAL_REGION_ENTER();
 			 Traver_num=0;
-			 Traver_List_Array();  																										//±éÀú²¢É¾³ıÁ´±í
+			 Traver_List_Array();  																										//éå†å¹¶åˆ é™¤é“¾è¡¨
 			  Uart_data[0]=0x55;
 				Uart_data[1]=0x01;
 				Uart_data[2]=Traver_num;
 			 Contrast_uart_receive[2]=Traver_num;
 			 memcpy(Uart_data+3,Inform_Array,Traver_num*sizeof(struct Information));
 			 m_Present_uart=3+Traver_num*3;
-			 Uart_data[m_Present_uart]=Crc8_Compute(Uart_data,m_Present_uart);				//Ìí¼ÓÒ»×Ö½ÚµÄcrcĞ£Ñé
+			 Uart_data[m_Present_uart]=Crc8_Compute(Uart_data,m_Present_uart);				//æ·»åŠ ä¸€å­—èŠ‚çš„crcæ ¡éªŒ
 			 Uart_data[++m_Present_uart]=0x0d;
 			 Uart_data[++m_Present_uart]=0x0a;
 			 m_Present_uart++;
@@ -239,13 +236,13 @@ static void Timeout_handler_transmit(void *p_context)                           
 			 nrf_drv_uart_tx(&Uart_Inst,Uart_data,m_Present_uart);
 	}
 }
-static void Timeout_handler_receive(void *p_context)  																  //´®¿Ú½ÓÊÕÊı¾İ´¦Àíº¯Êı
+static void Timeout_handler_receive(void *p_context)  																  //ä¸²å£æ¥æ”¶æ•°æ®å¤„ç†å‡½æ•°
 {
-		bool m_temp= *(bool *)p_context;                                            //¸ù¾İ´«½øÀ´µÄ²ÎÊıÖµ½øÈë²»Í¬µÄ·şÎñ
-	  if(m_temp)                                                                  //³¬Ê±ÖØ´«²Ù×÷
+		bool m_temp= *(bool *)p_context;                                            //æ ¹æ®ä¼ è¿›æ¥çš„å‚æ•°å€¼è¿›å…¥ä¸åŒçš„æœåŠ¡
+	  if(m_temp)                                                                  //è¶…æ—¶é‡ä¼ æ“ä½œ
 		{
 			  nrf_drv_uart_tx(&Uart_Inst,Uart_data,m_Present_uart);
-		}else{                                                                      //¶Ô´®¿ÚÊÕµ½µÄĞÅÏ¢×ö´¦Àí
+		}else{                                                                      //å¯¹ä¸²å£æ”¶åˆ°çš„ä¿¡æ¯åšå¤„ç†
 				CRITICAL_REGION_ENTER();
 			  if(strcmp((char*)Uart_data_receive,(char*)Contrast_uart_receive)==0)
 					{
@@ -257,16 +254,16 @@ static void Timeout_handler_receive(void *p_context)  																  //´®¿Ú½Ó
 		}
 }
 
-static void Times_init()                                                        			//³õÊ¼»¯RTC¶¨Ê±Æ÷
+static void Times_init()                                                        			//åˆå§‹åŒ–RTCå®šæ—¶å™¨
 {
 		app_timer_init();
-	  app_timer_create(&m_receiver,APP_TIMER_MODE_REPEATED,Timeout_handler_transmit);   //Ñ­»·¶¨Ê±Æ÷
+	  app_timer_create(&m_receiver,APP_TIMER_MODE_REPEATED,Timeout_handler_transmit);   //å¾ªç¯å®šæ—¶å™¨
 }
 static void APP_Start()
 {
 		app_timer_start(m_receiver,M_TIMER_INTERVAL,NULL);
 }
-void uart_event_handler(nrf_drv_uart_event_t *p_event,void* p_context)           //´®¿ÚÖĞ¶Ï´¦Àíº¯Êı
+void uart_event_handler(nrf_drv_uart_event_t *p_event,void* p_context)           //ä¸²å£ä¸­æ–­å¤„ç†å‡½æ•°
 {
 	  switch(p_event->type)
 		{
@@ -275,17 +272,17 @@ void uart_event_handler(nrf_drv_uart_event_t *p_event,void* p_context)          
 				  if(Is_Stop_Uart)
 								return;
 					nrf_drv_uart_rx_abort(&Uart_Inst);
-					nrf_drv_uart_rx(&Uart_Inst,Uart_data_receive,sizeof(Uart_data_receive));//µÈ´ı´®¿ÚĞÅÏ¢·şÎñ
+					nrf_drv_uart_rx(&Uart_Inst,Uart_data_receive,sizeof(Uart_data_receive));//ç­‰å¾…ä¸²å£ä¿¡æ¯æœåŠ¡
 			 }break;
 			 case NRF_DRV_UART_EVT_RX_DONE:
 			 {
-					Timeout_handler_receive(&is_false);																			//´¦Àí½ÓÊÕµ½µÄĞÅÏ¢
+					Timeout_handler_receive(&is_false);																			//å¤„ç†æ¥æ”¶åˆ°çš„ä¿¡æ¯
 			 }break;
 			 default:
 				 break;
 		}
 }
-static void Uart_init(void)																												//´®¿Ú³õÊ¼»¯
+static void Uart_init(void)																												//ä¸²å£åˆå§‹åŒ–
 {
 		nrf_drv_uart_config_t config_uart=NRF_DRV_UART_DEFAULT_CONFIG;
 	  config_uart.baudrate = Uart_BAUDRATE;
